@@ -1,4 +1,4 @@
-#Spotify Downloader (Flask App)
+## Spotify Downloader (Flask App) :zap:
 
 This is the Flask Application for the [spotify-downloader](https://github.com/spotify-downloader)
 
