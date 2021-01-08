@@ -3,7 +3,6 @@ from urllib.request import urlopen
 from mutagen.easyid3 import EasyID3, ID3
 from mutagen.id3 import APIC as AlbumCover
 from mutagen.id3 import USLT
-from urllib.request import urlopen
 from youtube_search import YoutubeSearch
 from pytube import YouTube
 from bs4 import BeautifulSoup
