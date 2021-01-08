@@ -120,9 +120,6 @@ def download(trackId):
 
         #Saving AlbumArt
         audioFile = ID3(convertedFilePath)
-        if songLyrics is not None:
-            uslt_output = USLT(encoding=3, lang=u'eng', desc=u'desc', text=songLyrics)
-            audioFile["USLT::'eng'"] = uslt_output
         audioFile['APIC'] = AlbumCover(encoding=3,mime='image/jpeg',type=3,desc='Album Art',data=get_album_art(data))
         audioFile.save(v2_version=3)
 
