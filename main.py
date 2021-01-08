@@ -5,7 +5,6 @@ from mutagen.id3 import APIC as AlbumCover
 from mutagen.id3 import USLT
 from youtube_search import YoutubeSearch
 from pytube import YouTube
-from bs4 import BeautifulSoup
 import base64
 import requests
 import json
