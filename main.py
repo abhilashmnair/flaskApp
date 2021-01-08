@@ -129,7 +129,6 @@ def download(trackId):
         audioFile.save(v2_version=3)
 
         #Fetch lyrics from Genius
-        '''
         lyricsUrl = f'https://genius.com{getLyricsUrl(get_title(data),get_album_artists(data))}'
 
         response = requests.get(lyricsUrl)
@@ -140,16 +139,12 @@ def download(trackId):
 
         for div in soup.findAll('div', attrs = {'class': 'lyrics'}):
             songLyrics = ''.join((songLyrics, div.text.strip()))
-    
-        '''
 
         #Saving AlbumArt
         audioFile = ID3(convertedFilePath)
-        '''
         if songLyrics is not None:
             uslt_output = USLT(encoding=3, lang=u'eng', desc=u'desc', text=songLyrics)
             audioFile["USLT::'eng'"] = uslt_output
-        '''
         audioFile['APIC'] = AlbumCover(encoding=3,mime='image/jpeg',type=3,desc='Album Art',data=get_album_art(data))
         audioFile.save(v2_version=3)
 
