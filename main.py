@@ -3,14 +3,16 @@ from urllib.request import urlopen
 from mutagen.easyid3 import EasyID3, ID3
 from mutagen.id3 import APIC as AlbumCover
 from mutagen.id3 import USLT
+from urllib.request import urlopen
 from youtube_search import YoutubeSearch
 from pytube import YouTube
 from bs4 import BeautifulSoup
 import base64
 import requests
 import json
-import os
+import moviepy.editor as mp
 from os.path import join, exists
+from os import remove
 
 def search_song(q):
     if 'open.spotify.com' in q:
@@ -25,24 +27,6 @@ def search_song(q):
         except:
             return None
 
-def downloadViaSpotify(headers,trackId):
-    requestUrl = f"https://api.spotify.com/v1/tracks/{trackId}"
-    response = requests.get(url=requestUrl, headers=headers)
-    data = response.json()
-
-    results = YoutubeSearch(f"{get_title(data)}+{get_artists(data)}", max_results=10).to_dict()
-    youtubeSongUrl = 'https://youtube.com/' + str(results[0]['url_suffix'])
-
-    convertedFileName = f'{get_album_artists(data)}-{get_title(data)}'
-    convertedFilePath = join('.',convertedFileName) + '.mp3'
-
-    if exists(convertedFilePath):
-        send_file(convertedFilePath, as_attachment=True)
-    else:
-        yt = YouTube(youtubeSongUrl)
-        downloadedFilePath = yt.streams.get_audio_only().download(filename=convertedFileName,skip_existing=False)
-        return convertedFilePath,downloadedFilePath,data
-
 def generate_code():
     message = '6923be29233a454f83f3db90b3172606:c0ec28811f0843d9aeea0a890cca3af2'
     messageBytes = message.encode('ascii')
@@ -54,7 +38,8 @@ def get_title(data):
 
 def get_album_art(data):
     imageUrl = data['album']['images'][0]['url']
-    return imageUrl
+    rawAlbumArt = urlopen(imageUrl).read()
+    return rawAlbumArt
 
 def get_artists(data):
     artists = []
@@ -92,10 +77,44 @@ def getLyricsUrl(title,artists):
     else:
         return None
 
-def saveMP3(downloadedFilePath,convertedFilePath,data):
-    #FFMPEG Conversion
-    command = f'ffmpeg -v quiet -y -i "{downloadedFilePath}" -acodec libmp3lame -abr true -af "apad=pad_dur=2" -vn -sn -dn -b:a 320k "{convertedFilePath}"'
-    os.system(command)
+tokenUrl = "https://accounts.spotify.com/api/token"
+headers = {}
+payload = {}
+
+headers['Authorization'] = f"Basic {generate_code()}"
+payload['grant_type'] = "client_credentials"
+
+r = requests.post(tokenUrl, headers=headers, data=payload)
+token = r.json()['access_token']
+headers = { "Authorization": "Bearer " + token }
+
+app = Flask(__name__)
+
+@app.route('/', methods=['GET'])
+def homepage():
+    return render_template('home.html')
+
+@app.route('/download/<trackId>')
+def download(trackId):
+    #return trackId
+    requestUrl = f"https://api.spotify.com/v1/tracks/{trackId}"
+    response = requests.get(url=requestUrl, headers=headers)
+    data = response.json()
+
+    results = YoutubeSearch(f"{get_title(data)}+{get_artists(data)}", max_results=10).to_dict()
+    youtubeSongUrl = 'https://youtube.com/' + str(results[0]['url_suffix'])
+
+    convertedFileName = f'{get_album_artists(data)}-{get_title(data)}'
+    convertedFilePath = join('.',convertedFileName) + '.mp3'
+
+    if exists(convertedFilePath):
+        send_file(convertedFilePath, as_attachment=True)
+    else:
+        yt = YouTube(youtubeSongUrl)
+        downloadedFilePath = yt.streams.get_audio_only().download(filename=convertedFileName,skip_existing=False)
+
+    clip = mp.AudioFileClip(downloadedFilePath)
+    clip.write_audiofile(convertedFilePath)
 
     audioFile = EasyID3(convertedFilePath)
     audioFile.delete()
@@ -132,32 +151,7 @@ def saveMP3(downloadedFilePath,convertedFilePath,data):
 
     #remove unwanted YouTube downloads
     remove(downloadedFilePath)
-    return convertedFilePath
-
-tokenUrl = "https://accounts.spotify.com/api/token"
-headers = {}
-payload = {}
-
-headers['Authorization'] = f"Basic {generate_code()}"
-payload['grant_type'] = "client_credentials"
-
-r = requests.post(tokenUrl, headers=headers, data=payload)
-token = r.json()['access_token']
-headers = { "Authorization": "Bearer " + token }
-
-trackId = ''
-
-app = Flask(__name__)
-
-@app.route('/', methods=['GET'])
-def homepage():
-    return render_template('home.html')
-
-@app.route('/download')
-def download():
-    convertedFilePath,downloadedFilePath,data = downloadViaSpotify(headers,trackId)
-    path = saveMP3(downloadedFilePath,convertedFilePath,data)
-    return send_file(path, as_attachment = True)
+    return send_file(convertedFilePath, as_attachment = True)
 
 @app.route('/', methods=['POST'])
 def getQuery():
@@ -169,13 +163,14 @@ def getQuery():
         data = response.json()
         return render_template(
             'result.html',
-            Uri = get_album_art(data),
+            Uri = data['album']['images'][0]['url'],
             title = get_title(data),
             artists = get_artists(data),
             album = get_album_name(data),
             album_artists = get_album_artists(data),
             year = get_release_year(data),
-            preview_url = data['preview_url']
+            preview_url = data['preview_url'],
+            trackId = trackId
         )
     else:
         return render_template('error.html')
