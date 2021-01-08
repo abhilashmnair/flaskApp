@@ -112,49 +112,50 @@ def download(trackId):
         yt = YouTube(youtubeSongUrl)
         downloadedFilePath = yt.streams.get_audio_only().download(filename=convertedFileName,skip_existing=False)
 
-    clip = mp.AudioFileClip(downloadedFilePath)
-    clip.write_audiofile(convertedFilePath)
+        clip = mp.AudioFileClip(downloadedFilePath)
+        clip.write_audiofile(convertedFilePath)
 
-    audioFile = EasyID3(convertedFilePath)
-    audioFile.delete()
+        audioFile = EasyID3(convertedFilePath)
+        audioFile.delete()
 
-    #Saving track info fetched from Spotify
-    audioFile['title'] = get_title(data)
-    audioFile['tracknumber'] = str(get_track_number(data))
-    audioFile['artist'] = get_artists(data)
-    audioFile['album'] = get_album_name(data)
-    audioFile['albumartist'] = get_album_artists(data)
-    audioFile['originaldate'] = str(get_release_year(data))
+        #Saving track info fetched from Spotify
+        audioFile['title'] = get_title(data)
+        audioFile['tracknumber'] = str(get_track_number(data))
+        audioFile['artist'] = get_artists(data)
+        audioFile['album'] = get_album_name(data)
+        audioFile['albumartist'] = get_album_artists(data)
+        audioFile['originaldate'] = str(get_release_year(data))
 
-    #Fetch lyrics from Genius
-    '''
-    lyricsUrl = f'https://genius.com{getLyricsUrl(get_title(data),get_album_artists(data))}'
+        audioFile.save(v2_version=3)
 
-    response = requests.get(lyricsUrl)
-    webpage = response.content
+        #Fetch lyrics from Genius
+        '''
+        lyricsUrl = f'https://genius.com{getLyricsUrl(get_title(data),get_album_artists(data))}'
 
-    soup = BeautifulSoup(webpage, 'html.parser')
-    songLyrics = ''
+        response = requests.get(lyricsUrl)
+        webpage = response.content
 
-    for div in soup.findAll('div', attrs = {'class': 'lyrics'}):
-        songLyrics = ''.join((songLyrics, div.text.strip()))
+        soup = BeautifulSoup(webpage, 'html.parser')
+        songLyrics = ''
+
+        for div in soup.findAll('div', attrs = {'class': 'lyrics'}):
+            songLyrics = ''.join((songLyrics, div.text.strip()))
     
-    '''
-    audioFile.save(v2_version=3)
+        '''
 
-    #Saving AlbumArt
-    audioFile = ID3(convertedFilePath)
-    '''
-    if songLyrics is not None:
-        uslt_output = USLT(encoding=3, lang=u'eng', desc=u'desc', text=songLyrics)
-        audioFile["USLT::'eng'"] = uslt_output
-    '''
-    audioFile['APIC'] = AlbumCover(encoding=3,mime='image/jpeg',type=3,desc='Album Art',data=get_album_art(data))
-    audioFile.save(v2_version=3)
+        #Saving AlbumArt
+        audioFile = ID3(convertedFilePath)
+        '''
+        if songLyrics is not None:
+            uslt_output = USLT(encoding=3, lang=u'eng', desc=u'desc', text=songLyrics)
+            audioFile["USLT::'eng'"] = uslt_output
+        '''
+        audioFile['APIC'] = AlbumCover(encoding=3,mime='image/jpeg',type=3,desc='Album Art',data=get_album_art(data))
+        audioFile.save(v2_version=3)
 
-    #remove unwanted YouTube downloads
-    remove(downloadedFilePath)
-    return send_file(convertedFilePath, as_attachment = True)
+        #remove unwanted YouTube downloads
+        remove(downloadedFilePath)
+        return send_file(convertedFilePath, as_attachment = True)
 
 @app.route('/', methods=['POST'])
 def getQuery():
