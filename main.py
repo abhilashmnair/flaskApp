@@ -96,7 +96,7 @@ def download(trackId):
     convertedFilePath = join('.',convertedFileName) + '.mp3'
 
     if exists(convertedFilePath):
-        send_file(convertedFilePath, as_attachment=True)
+        return send_file(convertedFilePath, as_attachment=True)
     else:
         yt = YouTube(youtubeSongUrl)
         downloadedFilePath = yt.streams.get_audio_only().download(filename=convertedFileName,skip_existing=False)
