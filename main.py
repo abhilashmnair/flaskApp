@@ -76,8 +76,7 @@ def homepage():
 
 @app.route('/download')
 def download():
-    print('Testing...')
-    return None
+    return send_file('sample.jpg', as_attachment = True)
 
 @app.route('/', methods=['POST'])
 def getQuery():
