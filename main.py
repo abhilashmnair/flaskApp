@@ -1,9 +1,16 @@
 from flask import Flask, request, render_template, send_file
-#from urllib.request import urlopen
-#from mutagen.id3 import APIC as AlbumCover
+from urllib.request import urlopen
+from mutagen.easyid3 import EasyID3, ID3
+from mutagen.id3 import APIC as AlbumCover
+from mutagen.id3 import USLT
+from youtube_search import YoutubeSearch
+from pytube import YouTube
+from bs4 import BeautifulSoup
 import base64
 import requests
 import json
+import os
+from os.path import join, exists
 
 def search_song(q):
     if 'open.spotify.com' in q:
@@ -17,6 +24,24 @@ def search_song(q):
             return data['tracks']['items'][0]['id']
         except:
             return None
+
+def downloadViaSpotify(headers,trackId):
+    requestUrl = f"https://api.spotify.com/v1/tracks/{trackId}"
+    response = requests.get(url=requestUrl, headers=headers)
+    data = response.json()
+
+    results = YoutubeSearch(f"{get_title(data)}+{get_artists(data)}", max_results=10).to_dict()
+    youtubeSongUrl = 'https://youtube.com/' + str(results[0]['url_suffix'])
+
+    convertedFileName = f'{get_album_artists(data)}-{get_title(data)}'
+    convertedFilePath = join('.',convertedFileName) + '.mp3'
+
+    if exists(convertedFilePath):
+        send_file(convertedFilePath, as_attachment=True)
+    else:
+        yt = YouTube(youtubeSongUrl)
+        downloadedFilePath = yt.streams.get_audio_only().download(filename=convertedFileName,skip_existing=False)
+        return convertedFilePath,downloadedFilePath,data
 
 def generate_code():
     message = '6923be29233a454f83f3db90b3172606:c0ec28811f0843d9aeea0a890cca3af2'
@@ -57,16 +82,70 @@ def get_album_artists(data):
         album_artists.append(item['name'])
     return ', '.join(str(val) for val in album_artists)
 
+def getLyricsUrl(title,artists):
+    url = f'https://api.genius.com/search?q={title}+{artists}&access_token=n-tH7xMZnw8efdj6-YgEzjbztbUkZatMT2O5Kkjgo4eBDgzjRiYj35KeN3pfExZB'
+    response = requests.get(url)
+    if response.ok:
+        data = response.json()
+        lyricsUrl = data['response']['hits'][0]['result']['path']
+        return lyricsUrl
+    else:
+        return None
+
+def saveMP3(downloadedFilePath,convertedFilePath,data):
+    #FFMPEG Conversion
+    command = f'ffmpeg -v quiet -y -i "{downloadedFilePath}" -acodec libmp3lame -abr true -af "apad=pad_dur=2" -vn -sn -dn -b:a 320k "{convertedFilePath}"'
+    os.system(command)
+
+    audioFile = EasyID3(convertedFilePath)
+    audioFile.delete()
+
+    #Saving track info fetched from Spotify
+    audioFile['title'] = get_title(data)
+    audioFile['tracknumber'] = str(get_track_number(data))
+    audioFile['artist'] = get_artists(data)
+    audioFile['album'] = get_album_name(data)
+    audioFile['albumartist'] = get_album_artists(data)
+    audioFile['originaldate'] = str(get_release_year(data))
+
+    #Fetch lyrics from Genius
+    lyricsUrl = f'https://genius.com{getLyricsUrl(get_title(data),get_album_artists(data))}'
+
+    response = requests.get(lyricsUrl)
+    webpage = response.content
+
+    soup = BeautifulSoup(webpage, 'html.parser')
+    songLyrics = ''
+
+    for div in soup.findAll('div', attrs = {'class': 'lyrics'}):
+        songLyrics = ''.join((songLyrics, div.text.strip()))
+    
+    audioFile.save(v2_version=3)
+
+    #Saving AlbumArt
+    audioFile = ID3(convertedFilePath)
+    if songLyrics is not None:
+        uslt_output = USLT(encoding=3, lang=u'eng', desc=u'desc', text=songLyrics)
+        audioFile["USLT::'eng'"] = uslt_output
+    audioFile['APIC'] = AlbumCover(encoding=3,mime='image/jpeg',type=3,desc='Album Art',data=get_album_art(data))
+    audioFile.save(v2_version=3)
+
+    #remove unwanted YouTube downloads
+    remove(downloadedFilePath)
+    return convertedFilePath
+
 tokenUrl = "https://accounts.spotify.com/api/token"
 headers = {}
-data = {}
+payload = {}
 
 headers['Authorization'] = f"Basic {generate_code()}"
-data['grant_type'] = "client_credentials"
+payload['grant_type'] = "client_credentials"
 
-r = requests.post(tokenUrl, headers=headers, data=data)
+r = requests.post(tokenUrl, headers=headers, data=payload)
 token = r.json()['access_token']
 headers = { "Authorization": "Bearer " + token }
+
+trackId = ''
 
 app = Flask(__name__)
 
@@ -76,7 +155,9 @@ def homepage():
 
 @app.route('/download')
 def download():
-    return send_file('sample.jpg', as_attachment = True)
+    convertedFilePath,downloadedFilePath,data = downloadViaSpotify(headers,trackId)
+    path = saveMP3(downloadedFilePath,convertedFilePath,data)
+    return send_file(path, as_attachment = True)
 
 @app.route('/', methods=['POST'])
 def getQuery():
