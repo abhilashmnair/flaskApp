@@ -66,16 +66,6 @@ def get_album_artists(data):
         album_artists.append(item['name'])
     return ', '.join(str(val) for val in album_artists)
 
-def getLyricsUrl(title,artists):
-    url = f'https://api.genius.com/search?q={title}+{artists}&access_token=n-tH7xMZnw8efdj6-YgEzjbztbUkZatMT2O5Kkjgo4eBDgzjRiYj35KeN3pfExZB'
-    response = requests.get(url)
-    if response.ok:
-        data = response.json()
-        lyricsUrl = data['response']['hits'][0]['result']['path']
-        return lyricsUrl
-    else:
-        return None
-
 tokenUrl = "https://accounts.spotify.com/api/token"
 headers = {}
 payload = {}
@@ -127,18 +117,6 @@ def download(trackId):
         audioFile['originaldate'] = str(get_release_year(data))
 
         audioFile.save(v2_version=3)
-
-        #Fetch lyrics from Genius
-        lyricsUrl = f'https://genius.com{getLyricsUrl(get_title(data),get_album_artists(data))}'
-
-        response = requests.get(lyricsUrl)
-        webpage = response.content
-
-        soup = BeautifulSoup(webpage, 'html.parser')
-        songLyrics = ''
-
-        for div in soup.findAll('div', attrs = {'class': 'lyrics'}):
-            songLyrics = ''.join((songLyrics, div.text.strip()))
 
         #Saving AlbumArt
         audioFile = ID3(convertedFilePath)
