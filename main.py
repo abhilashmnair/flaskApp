@@ -8,10 +8,20 @@ from pytube import YouTube
 import base64
 import requests
 import json
+import pyrebase
 from telegram import *
 import moviepy.editor as mp
 from os.path import join, exists
 from os import remove
+
+firebaseConfig = {
+  'apiKey' : "AIzaSyAqHFad9F40Iqxr0Jemg-ePuOjXUIHSBRo",
+  'authDomain' : "spotifydl-3f7a8.firebaseapp.com",
+  'projectId' : "spotifydl-3f7a8",
+  'storageBucket' : "spotifydl-3f7a8.appspot.com",
+  'messagingSenderId' : "532015727292",
+  'appId' : "1:532015727292:web:40a9ec87ee5959092986b9"
+}
 
 def search_song(q):
     if 'open.spotify.com' in q:
@@ -77,8 +87,8 @@ r = requests.post(tokenUrl, headers=headers, data=payload)
 token = r.json()['access_token']
 headers = { "Authorization": "Bearer " + token }
 
-
-
+firebase = pyrebase.initialize_app(firebaseConfig)
+db = firebase.database()
 
 app = Flask(__name__)
 
@@ -129,7 +139,9 @@ def download(trackId):
         #remove unwanted YouTube downloads
         remove(downloadedFilePath)
         bot = Bot('1518831575:AAG-aQI7P3xqbXZEEv0tlcYJTBZVBNr7Cp0')
-        bot.send_audio(chat_id='@spotifydldatabase', title = get_title(data), performer = get_artists(data), audio=open(convertedFilePath, 'rb'))
+        response = bot.send_audio(chat_id='@spotifydldatabase', title = get_title(data), performer = get_artists(data), audio=open(convertedFilePath, 'rb'))
+        file_id = response['audio']['file_id']
+        db.child(file_id).set({ 'title' : get_title(data), 'artists' : get_artists(data)})
         return send_file(convertedFilePath, as_attachment = True)
 
 @app.route('/', methods=['POST'])
