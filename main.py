@@ -20,6 +20,7 @@ firebaseConfig = {
   'projectId' : "spotifydl-3f7a8",
   'storageBucket' : "spotifydl-3f7a8.appspot.com",
   'messagingSenderId' : "532015727292",
+  'databaseURL' : "https://spotifydl-3f7a8-default-rtdb.firebaseio.com",
   'appId' : "1:532015727292:web:40a9ec87ee5959092986b9"
 }
 
