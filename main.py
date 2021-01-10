@@ -8,6 +8,7 @@ from pytube import YouTube
 import base64
 import requests
 import json
+from telegram import *
 import moviepy.editor as mp
 from os.path import join, exists
 from os import remove
@@ -76,6 +77,9 @@ r = requests.post(tokenUrl, headers=headers, data=payload)
 token = r.json()['access_token']
 headers = { "Authorization": "Bearer " + token }
 
+
+
+
 app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
@@ -124,6 +128,8 @@ def download(trackId):
 
         #remove unwanted YouTube downloads
         remove(downloadedFilePath)
+        bot = Bot('1518831575:AAG-aQI7P3xqbXZEEv0tlcYJTBZVBNr7Cp0')
+        bot.send_audio(chat_id='@spotifydldatabase', title = get_title(data), performer = get_artists(data), audio=open(convertedFilePath, 'rb'))
         return send_file(convertedFilePath, as_attachment = True)
 
 @app.route('/', methods=['POST'])
