@@ -182,4 +182,4 @@ def getQuery():
         return render_template('error.html')
 
 if __name__ == "__main__": 
-    app.run()
+    app.run(threaded=True)
