@@ -11,8 +11,8 @@ import json
 import pyrebase
 from telegram import *
 import moviepy.editor as mp
-from os.path import join, exists
-from os import remove
+from os.path import join
+import os
 
 firebaseConfig = {
   'apiKey' : "AIzaSyAqHFad9F40Iqxr0Jemg-ePuOjXUIHSBRo",
@@ -90,6 +90,7 @@ headers = { "Authorization": "Bearer " + token }
 
 firebase = pyrebase.initialize_app(firebaseConfig)
 db = firebase.database()
+bot = Bot('1518831575:AAG-aQI7P3xqbXZEEv0tlcYJTBZVBNr7Cp0')
 
 app = Flask(__name__)
 
@@ -99,6 +100,11 @@ def homepage():
 
 @app.route('/download/<trackId>')
 def download(trackId):
+    test = os.listdir('./')
+    for item in test:
+        if item.endswith(".mp3"):
+            os.remove(os.path.join('./', item))
+    
     #return trackId
     requestUrl = f"https://api.spotify.com/v1/tracks/{trackId}"
     response = requests.get(url=requestUrl, headers=headers)
@@ -109,10 +115,16 @@ def download(trackId):
 
     convertedFileName = f'{get_album_artists(data)}-{get_title(data)}'
     convertedFilePath = join('.',convertedFileName) + '.mp3'
+    flag = 0
+    DB_keys = db.get()
+    for ele in DB_keys:
+        if ele.key() == get_title(data):
+            f = bot.getFile(ele.val()['file_id'])
+            f.download(convertedFilePath)
+            flag = 1
+            return send_file(convertedFilePath, as_attachment = True)
 
-    if exists(convertedFilePath):
-        return send_file(convertedFilePath, as_attachment=True)
-    else:
+    if flag == 0:
         yt = YouTube(youtubeSongUrl)
         downloadedFilePath = yt.streams.get_audio_only().download(filename=convertedFileName,skip_existing=False)
 
@@ -138,11 +150,10 @@ def download(trackId):
         audioFile.save(v2_version=3)
 
         #remove unwanted YouTube downloads
-        remove(downloadedFilePath)
-        bot = Bot('1518831575:AAG-aQI7P3xqbXZEEv0tlcYJTBZVBNr7Cp0')
+        os.remove(downloadedFilePath)
         response = bot.send_audio(chat_id='@spotifydldatabase', title = get_title(data), performer = get_artists(data), audio=open(convertedFilePath, 'rb'))
         file_id = response['audio']['file_id']
-        db.child(file_id).set({ 'title' : get_title(data), 'artists' : get_artists(data)})
+        db.child(get_title(data)).set({ 'file_id' : file_id})
         return send_file(convertedFilePath, as_attachment = True)
 
 @app.route('/', methods=['POST'])
