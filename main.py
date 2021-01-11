@@ -116,16 +116,17 @@ def download(trackId):
 
     convertedFileName = f'{get_album_artists(data)}-{get_title(data)}'
     convertedFilePath = join('.',convertedFileName) + '.mp3'
-    flag = 0
-    DB_keys = db.get()
-    if DB_keys is not None:
-        for ele in DB_keys:
-            if ele.key() == get_title(data):
-                f = bot.getFile(ele.val()['file_id'])
-                f.download(convertedFilePath)
-                flag = 1
-                return send_file(convertedFilePath, as_attachment = True)
 
+    title = get_title(data)
+    flag = 0
+    keys = db.get()
+    for ele in keys.each():
+        if ele.key() == re.sub('[^A-Za-z0-9]+', '', title):
+            f = bot.getFile(ele.val()['file_id'])
+            f.download(convertedFilePath)
+            flag = 1
+            return send_file(convertedFilePath, as_attachment = True)
+    
     if flag == 0:
         yt = YouTube(youtubeSongUrl)
         downloadedFilePath = yt.streams.get_audio_only().download(filename=convertedFileName,skip_existing=False)
@@ -182,4 +183,4 @@ def getQuery():
         return render_template('error.html')
 
 if __name__ == "__main__": 
-    app.run(threaded=True)
+    app.run(threaded = True)
