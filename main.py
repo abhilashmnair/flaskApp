@@ -111,7 +111,7 @@ def download(trackId):
     response = requests.get(url=requestUrl, headers=headers)
     data = response.json()
 
-    results = YoutubeSearch(f"{get_title(data)}+{get_artists(data)}+audio", max_results=10).to_dict()
+    results = YoutubeSearch(f"{get_artists(data)}+{get_title(data)}+audio", max_results=10).to_dict()
     youtubeSongUrl = 'https://youtube.com/' + str(results[0]['url_suffix'])
 
     convertedFileName = f'{get_album_artists(data)}-{get_title(data)}'
