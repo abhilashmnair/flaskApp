@@ -117,7 +117,7 @@ def download(trackId):
     convertedFilePath = join('.',convertedFileName) + '.mp3'
     flag = 0
     DB_keys = db.get()
-    if DB_keys not None:
+    if DB_keys is not None:
         for ele in DB_keys:
             if ele.key() == get_title(data):
                 f = bot.getFile(ele.val()['file_id'])
