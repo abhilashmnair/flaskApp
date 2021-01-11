@@ -13,6 +13,7 @@ from telegram import *
 import moviepy.editor as mp
 from os.path import join
 import os
+import re
 
 firebaseConfig = {
   'apiKey' : "AIzaSyAqHFad9F40Iqxr0Jemg-ePuOjXUIHSBRo",
@@ -154,7 +155,8 @@ def download(trackId):
         os.remove(downloadedFilePath)
         response = bot.send_audio(chat_id='@spotifydldatabase', title = get_title(data), performer = get_artists(data), audio=open(convertedFilePath, 'rb'))
         file_id = response['audio']['file_id']
-        db.child(get_title(data)).set({ 'file_id' : file_id})
+        key = re.sub('[^A-Za-z0-9]+', '', get_title(data))
+        db.child(key).set({ 'file_id' : file_id})
         return send_file(convertedFilePath, as_attachment = True)
 
 @app.route('/', methods=['POST'])
