@@ -117,12 +117,13 @@ def download(trackId):
     convertedFilePath = join('.',convertedFileName) + '.mp3'
     flag = 0
     DB_keys = db.get()
-    for ele in DB_keys:
-        if ele.key() == get_title(data):
-            f = bot.getFile(ele.val()['file_id'])
-            f.download(convertedFilePath)
-            flag = 1
-            return send_file(convertedFilePath, as_attachment = True)
+    if DB_keys not None:
+        for ele in DB_keys:
+            if ele.key() == get_title(data):
+                f = bot.getFile(ele.val()['file_id'])
+                f.download(convertedFilePath)
+                flag = 1
+                return send_file(convertedFilePath, as_attachment = True)
 
     if flag == 0:
         yt = YouTube(youtubeSongUrl)
