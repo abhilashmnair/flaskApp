@@ -121,13 +121,16 @@ def download(trackId):
     fileKey = re.sub('[^A-Za-z0-9]+', '', DBkey)
     flag = 0
     keys = db.child('tracks').child(fileKey[0].upper()).get()
-    if not None in keys:
-        for ele in keys:
-            if ele.key() == fileKey:
-                f = bot.getFile(ele.val()['file_id'])
-                f.download(convertedFilePath)
-                flag = 1
-                return send_file(convertedFilePath, as_attachment = True)
+    try:
+        if not None in keys:
+            for ele in keys:
+                if ele.key() == fileKey:
+                    f = bot.getFile(ele.val()['file_id'])
+                    f.download(convertedFilePath)
+                    flag = 1
+                    return send_file(convertedFilePath, as_attachment = True)
+    except:
+        x = 1
     
     if flag == 0:
         yt = YouTube(youtubeSongUrl)
