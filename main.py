@@ -90,7 +90,7 @@ token = r.json()['access_token']
 headers = { "Authorization": "Bearer " + token }
 
 firebase = pyrebase.initialize_app(firebaseConfig)
-db = firebase.database()
+db = firebase.database().child('songs')
 bot = Bot('1518831575:AAG-aQI7P3xqbXZEEv0tlcYJTBZVBNr7Cp0')
 
 app = Flask(__name__)
@@ -119,7 +119,7 @@ def download(trackId):
 
     DBkey = get_title(data) + get_artists(data)
     flag = 0
-    keys = db.get()
+    keys = db.child(DBkey[0].upper()).get()
     for ele in keys.each():
         if ele.key() == re.sub('[^A-Za-z0-9]+', '', DBkey):
             f = bot.getFile(ele.val()['file_id'])
@@ -156,8 +156,13 @@ def download(trackId):
         os.remove(downloadedFilePath)
         response = bot.send_audio(chat_id='@spotifydldatabase', title = get_title(data), performer = get_artists(data), audio=open(convertedFilePath, 'rb'))
         file_id = response['audio']['file_id']
+<<<<<<< Updated upstream
         key = re.sub('[^A-Za-z0-9]+', '', DBkey)
         db.child(key).set({ 'file_id' : file_id})
+=======
+        key = re.sub('[^A-Za-z0-9]+', '', get_title(data))
+        db.child(key[0].upper()).child(key).set({ 'file_id' : file_id})
+>>>>>>> Stashed changes
         return send_file(convertedFilePath, as_attachment = True)
 
 @app.route('/', methods=['POST'])
