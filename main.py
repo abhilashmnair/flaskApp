@@ -90,7 +90,8 @@ token = r.json()['access_token']
 headers = { "Authorization": "Bearer " + token }
 
 firebase = pyrebase.initialize_app(firebaseConfig)
-db = firebase.database().child('songs')
+db = firebase.database()
+
 bot = Bot('1518831575:AAG-aQI7P3xqbXZEEv0tlcYJTBZVBNr7Cp0')
 
 app = Flask(__name__)
