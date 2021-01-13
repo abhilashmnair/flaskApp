@@ -156,13 +156,8 @@ def download(trackId):
         os.remove(downloadedFilePath)
         response = bot.send_audio(chat_id='@spotifydldatabase', title = get_title(data), performer = get_artists(data), audio=open(convertedFilePath, 'rb'))
         file_id = response['audio']['file_id']
-<<<<<<< Updated upstream
         key = re.sub('[^A-Za-z0-9]+', '', DBkey)
-        db.child(key).set({ 'file_id' : file_id})
-=======
-        key = re.sub('[^A-Za-z0-9]+', '', get_title(data))
         db.child(key[0].upper()).child(key).set({ 'file_id' : file_id})
->>>>>>> Stashed changes
         return send_file(convertedFilePath, as_attachment = True)
 
 @app.route('/', methods=['POST'])
