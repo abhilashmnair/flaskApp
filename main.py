@@ -123,9 +123,7 @@ def download(trackId):
     key = db.child('tracks').child(fileKey).get()
     
     try:
-        f = bot.getFile(key.val()['file_id'])
-        f.download(convertedFilePath)
-        return send_file(convertedFilePath, as_attachment = True)
+        return send_file(bot.getFile(key.val()['file_id']).download(), as_attachment = True)
     
     except:
         yt = YouTube(youtubeSongUrl)
