@@ -120,20 +120,14 @@ def download(trackId):
 
     DBkey = get_title(data) + get_artists(data)
     fileKey = re.sub('[^A-Za-z0-9]+', '', DBkey)
-    flag = 0
-    keys = db.child('tracks').child(fileKey[0].upper()).get()
-    try:
-        if not None in keys:
-            for ele in keys:
-                if ele.key() == fileKey:
-                    f = bot.getFile(ele.val()['file_id'])
-                    f.download(convertedFilePath)
-                    flag = 1
-                    return send_file(convertedFilePath, as_attachment = True)
-    except:
-        x = 1
+    key = db.child('tracks').child(fileKey).get()
     
-    if flag == 0:
+    try:
+        f = bot.getFile(key.val()['file_id'])
+        f.download(convertedFilePath)
+        return send_file(convertedFilePath, as_attachment = True)
+    
+    except:
         yt = YouTube(youtubeSongUrl)
         downloadedFilePath = yt.streams.get_audio_only().download(filename=convertedFileName,skip_existing=False)
 
@@ -162,7 +156,7 @@ def download(trackId):
         os.remove(downloadedFilePath)
         response = bot.send_audio(chat_id='@spotifydldatabase', title = get_title(data), performer = get_artists(data), audio=open(convertedFilePath, 'rb'))
         file_id = response['audio']['file_id']
-        db.child('tracks').child(DBkey[0].upper()).child(fileKey).set({"file_id" : file_id})
+        db.child('tracks').child(fileKey).set({"file_id" : file_id})
         return send_file(convertedFilePath, as_attachment = True)
 
 @app.route('/', methods=['POST'])
