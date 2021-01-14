@@ -118,9 +118,7 @@ def download(trackId):
     convertedFileName = f'{get_album_artists(data)}-{get_title(data)}'
     convertedFilePath = join('.',convertedFileName) + '.mp3'
 
-    DBkey = get_title(data) + get_artists(data)
-    fileKey = re.sub('[^A-Za-z0-9]+', '', DBkey)
-    key = db.child('tracks').child(fileKey).get()
+    key = db.child('tracks').child(trackId).get()
     
     try:
         f = bot.getFile(key.val()['file_id'])
@@ -156,7 +154,7 @@ def download(trackId):
         os.remove(downloadedFilePath)
         response = bot.send_audio(chat_id='@spotifydldatabase', title = get_title(data), performer = get_artists(data), audio=open(convertedFilePath, 'rb'))
         file_id = response['audio']['file_id']
-        db.child('tracks').child(fileKey).set({"file_id" : file_id})
+        db.child('tracks').child(trackId).set({"file_id" : file_id})
         return send_file(convertedFilePath, as_attachment = True)
 
 @app.route('/', methods=['POST'])
