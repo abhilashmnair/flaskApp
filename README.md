@@ -1,5 +1,7 @@
-## Spotify Downloader (Flask App) : headphone s:
+## Spotify Downloader 
 
-This is the Flask Application for the [spotify-downloader](https://github.com/abhilashmnair/spotify-downloader)
+A web application made with Flask framework for music downloading using the Spotify API. Uses Firebase to save the downloaded records and Telegram as music database.
 
-Hosted in [Heroku](https://spotifydownload.herokuapp.com)
+Hosted on [Heroku](https://spotifydownload.herokuapp.com) with ❤️.
+
+
