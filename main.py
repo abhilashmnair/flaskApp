@@ -15,7 +15,15 @@ from os.path import join
 import os
 import re
 
-firebaseConfig = { FIREBASE_CONFIG }
+firebaseConfig = {
+  'apiKey' : "AIzaSyAqHFad9F40Iqxr0Jemg-ePuOjXUIHSBRo",
+  'authDomain' : "spotifydl-3f7a8.firebaseapp.com",
+  'projectId' : "spotifydl-3f7a8",
+  'storageBucket' : "spotifydl-3f7a8.appspot.com",
+  'messagingSenderId' : "532015727292",
+  'databaseURL' : "https://spotifydl-3f7a8-default-rtdb.firebaseio.com",
+  'appId' : "1:532015727292:web:40a9ec87ee5959092986b9"
+}
 
 def search_song(q):
     if 'open.spotify.com' in q:
@@ -31,7 +39,7 @@ def search_song(q):
             return None
 
 def generate_code():
-    message = 'SPOTIFY_ID:SPOTIFY_SECRET'
+    message = "6923be29233a454f83f3db90b3172606:c0ec28811f0843d9aeea0a890cca3af2"
     messageBytes = message.encode('ascii')
     base64Bytes = base64.b64encode(messageBytes)
     return base64Bytes.decode('ascii')
@@ -84,7 +92,7 @@ headers = { "Authorization": "Bearer " + token }
 firebase = pyrebase.initialize_app(firebaseConfig)
 db = firebase.database()
 
-bot = Bot("BOT_TOKEN")
+bot = Bot("1594646806:AAGAwkiPwCx_X3wxsiLhPcBh7oLWJ4nmpFs")
 
 app = Flask(__name__)
 
