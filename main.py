@@ -39,7 +39,7 @@ def search_song(q):
             return None
 
 def generate_code():
-    message = '6923be29233a454f83f3db90b3172606:c0ec28811f0843d9aeea0a890cca3af2'
+    message = "6923be29233a454f83f3db90b3172606:c0ec28811f0843d9aeea0a890cca3af2"
     messageBytes = message.encode('ascii')
     base64Bytes = base64.b64encode(messageBytes)
     return base64Bytes.decode('ascii')
@@ -92,7 +92,7 @@ headers = { "Authorization": "Bearer " + token }
 firebase = pyrebase.initialize_app(firebaseConfig)
 db = firebase.database()
 
-bot = Bot('1518831575:AAG-aQI7P3xqbXZEEv0tlcYJTBZVBNr7Cp0')
+bot = Bot("1594646806:AAGAwkiPwCx_X3wxsiLhPcBh7oLWJ4nmpFs")
 
 app = Flask(__name__)
 
