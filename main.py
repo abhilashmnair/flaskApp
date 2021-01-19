@@ -25,19 +25,6 @@ firebaseConfig = {
   'appId' : "1:532015727292:web:40a9ec87ee5959092986b9"
 }
 
-def search_song(q):
-    if 'open.spotify.com' in q:
-        return q.split('/')[4]
-    else:
-        query = '+'.join(str(val) for val in q.split(' '))
-        requestUrl = f"https://api.spotify.com/v1/search?q={query}&type=track,artist,album"
-        response = requests.get(url=requestUrl, headers=headers)
-        data = response.json()
-        try:
-            return data['tracks']['items'][0]['id']
-        except:
-            return None
-
 def generate_code():
     message = "6923be29233a454f83f3db90b3172606:c0ec28811f0843d9aeea0a890cca3af2"
     messageBytes = message.encode('ascii')
@@ -158,11 +145,16 @@ def download(trackId):
 
 @app.route('/', methods=['POST'])
 def getQuery():
-    text = request.form['query']
-    trackId = search_song(text)
-    requestUrl = f"https://api.spotify.com/v1/tracks/{trackId}"
-    response = requests.get(url=requestUrl, headers=headers)
-    if response.ok:
+    rawQuery = request.form['query']
+    if 'open.spotify.com' not in rawQuery:
+        return render_template('error.html')
+    else:
+        if '?' in rawQuery:
+            trackId = rawQuery.split('/')[4].split('?')[0]
+        else:
+            trackId = rawQuery.split('/')[4]
+        requestUrl = f"https://api.spotify.com/v1/tracks/{trackId}"
+        response = requests.get(url=requestUrl, headers=headers)
         data = response.json()
         return render_template(
             'result.html',
@@ -175,8 +167,6 @@ def getQuery():
             preview_url = data['preview_url'],
             trackId = trackId
         )
-    else:
-        return render_template('error.html')
 
 if __name__ == "__main__": 
     app.run(threaded = True)
