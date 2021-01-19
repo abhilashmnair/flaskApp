@@ -112,7 +112,7 @@ def download(trackId):
     response = requests.get(url=requestUrl, headers=headers)
     data = response.json()
 
-    results = YoutubeSearch(f"{get_artists(data)}+{get_title(data)}+audio", max_results=10).to_dict()
+    results = YoutubeSearch(f"{get_artists(data)}+{get_title(data)}+audio+only", max_results=10).to_dict()
     youtubeSongUrl = 'https://youtube.com/' + str(results[0]['url_suffix'])
 
     convertedFileName = f'{get_album_artists(data)}-{get_title(data)}'
@@ -124,7 +124,6 @@ def download(trackId):
         f = bot.getFile(key.val()['file_id'])
         f.download(convertedFilePath)
         return send_file(convertedFilePath, as_attachment = True)
-    
     except:
         yt = YouTube(youtubeSongUrl)
         downloadedFilePath = yt.streams.get_audio_only().download(filename=convertedFileName,skip_existing=False)
